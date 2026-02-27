@@ -128,37 +128,120 @@ Operating principles
 
 ---
 
-## Codexa
+## Codexa (Active)
 
-Responsibilities
+Codexa is the identity engine.
+It governs how technical elements are named, traced, and kept consistent across files, exports, and workflows.
 
-- parts codification (GR39)
-- assembly codification (GR90<COMMESSA8>-FNNN)
-- multi-extension rename clustered by BaseKey
-- collision guards within and across groups
-- Concept-ready exports
+What it delivers
 
-Contractual mapping CSV header (immutable order)
-
-```
-OLD_CODE;NEW_CODE;OLD_FILE;NEW_FILE;STATO
-```
+- Unified codification that stays stable over time
+- Multi-format governance (the same technical item can exist in many file types without fragmentation)
+- Collision-safe operations (no silent overwrite, no ambiguous results)
+- Preview-first execution (visibility before commitment)
+- Clean exports designed for enterprise import pipelines
 
 ---
 
-## Axion
+## Axion (Active)
 
-Responsibilities
+Axion is the structure engine.
+It builds and validates hierarchical structures so that complex assemblies remain coherent from engineering intent to operational reality.
 
-- hierarchical BOM construction
-- parent-child validation
-- export `AXION_DISTINTA_BASE_<COMMESSA8>.xls`
-- audit JSON and technical diagnostic CSV
+What it delivers
 
-Loader priority
+- Hierarchical structure construction (parent → child consistency)
+- Structural validation and integrity checks
+- Export readiness for structured enterprise environments
+- Audit separated from target outputs (traceability without contaminating production datasets)
 
-1. Manifest  
-2. Explicit legacy fallback
+---
+
+## Structor (In development)
+
+Structor is the transformation layer.
+It is designed to convert engineering structure into production-ready structure without losing meaning, traceability, or responsibility boundaries.
+
+Designed for
+
+- Structure normalization and controlled transformations
+- Translation from engineering assemblies to operational groupings
+- Rule-driven restructuring with explicit audit trails
+- Stability under change: evolve structure without breaking identity
+
+---
+
+## NexFlow (Planned)
+
+NexFlow is the supervision and governance layer.
+It is designed to ensure modules evolve together without drift, contradictions, or silent regressions.
+
+Designed for
+
+- Cross-module validation gates before execution
+- Drift detection between upstream certified outputs and downstream usage
+- Approval-style flow discipline: preview → validate → execute
+- Controlled evolution with explicit compatibility boundaries
+
+---
+
+## CoreSync (Planned)
+
+CoreSync is the backbone.
+It is designed to synchronize shared state and enforce suite-wide contracts so that governance remains deterministic at scale.
+
+Designed for
+
+- Shared contract enforcement across modules
+- Central consistency checks and policy application
+- Suite-wide synchronization of governed identities and structures
+- Standardized run lifecycle and unified operational conventions
+
+---
+
+## Ordinex (Planned)
+
+Ordinex is the operational normalization layer.
+It is designed to bridge technical structure with operational workflows while preserving identity and structural integrity.
+
+Designed for
+
+- Operational normalization driven by governed structures (not manual reconciliation)
+- Workflow coherence across technical, production, and administrative layers
+- Non-destructive mapping: preserve identity while adapting operational grouping
+- Enterprise-ready datasets for repeatable execution
+
+---
+
+## Vaultis (Planned)
+
+Vaultis is the enterprise vault governance layer.
+It is designed to operate on entire CAD ecosystems, not isolated files.
+
+Designed for
+
+- Full re-codification of complete CAD vaults (Inventor, SolidWorks)
+- Preservation of assembly relationships, references, and dependency integrity
+- Non-destructive reorganization: no broken assemblies, no lost links
+- Automated, governed organization of technical archives on the company server
+- Migration from legacy naming chaos to structured, governed identity
+
+Vaultis is not file renaming.
+It is vault governance.
+
+---
+
+## Stratix (Planned)
+
+Stratix is the intelligence layer.
+It is designed to transform governed technical reality into insight, planning, and long-term evolution control.
+
+Designed for
+
+- KPI and performance intelligence derived from governed structures
+- Early detection of structural anomalies and duplication patterns
+- Planning views across projects and technical domains
+- Governance dashboards for controlled ecosystem evolution
 
 ---
 
@@ -168,21 +251,27 @@ Loader priority
 
 | Module | Purpose |
 |--------|---------|
-| **Codexa** | Parts and assembly codification, mapping CSV, collision guards |
-| **Axion** | Hierarchical BOM, parent-child validation, ERP-ready exports |
+| Codexa | Identity governance: stable codification across formats, collision-safe operations, preview-first execution |
+| Axion | Structure governance: validated hierarchies, integrity checks, export readiness with separated audit |
 
-### In development
+### In development / planned
 
 | Module | Purpose |
 |--------|---------|
-| **Structor** | Structure-to-order transformation, technical normalization, library management |
-| **NexFlow** | Approval flows between technical, production and administration, version validation |
-| **CoreSync** | Shared services, data synchronization, inter-module contracts |
-| **Ordinex** | Order normalization, workflow consistency |
-| **Vaultis** | Artifact custody, audit trail, access policies |
-| **Stratix** | Planning layer, analytics, KPI |
+| Structor | Controlled transformation from engineering structure to operational structure, with traceability |
+| NexFlow | Cross-module supervision: validation gates, drift detection, controlled evolution |
+| CoreSync | Contract backbone: shared policy enforcement, deterministic synchronization |
+| Ordinex | Operational normalization: workflow coherence without breaking identity |
+| Vaultis | Enterprise CAD vault governance: re-codification preserving relationships + server organization |
+| Stratix | Strategic intelligence: analytics, planning, and ecosystem evolution forecasting |
 
-These modules extend the pipeline and will be released as they reach stable status.
+### Evolution principle
+
+Modules are activated only when stable.
+Each new layer increases governance depth without compromising what is already certified upstream.
+
+Nexum does not add complexity.
+It removes entropy.
 
 ---
 
