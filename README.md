@@ -95,6 +95,30 @@ Loader priority
 
 ---
 
+## Modules and roadmap
+
+### Available now
+
+| Module | Purpose |
+|--------|---------|
+| **Codexa** | Parts and assembly codification, mapping CSV, collision guards |
+| **Axion** | Hierarchical BOM, parent-child validation, ERP-ready exports |
+
+### In development
+
+| Module | Purpose |
+|--------|---------|
+| **Structor** | Structure-to-order transformation, technical normalization, library management |
+| **NexFlow** | Approval flows between technical, production and administration, version validation |
+| **CoreSync** | Shared services, data synchronization, inter-module contracts |
+| **Ordinex** | Order normalization, workflow consistency |
+| **Vaultis** | Artifact custody, audit trail, access policies |
+| **Stratix** | Planning layer, analytics, KPI |
+
+These modules extend the pipeline and will be released as they reach stable status.
+
+---
+
 ## Governance
 
 - `MODULE_REGISTRY` as the source of truth
