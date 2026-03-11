@@ -1,0 +1,128 @@
+name: release-from-source
+
+on:
+  repository_dispatch:
+    types:
+      - release-from-private
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to build from GTR2500/NEXUM
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      id-token: write
+      contents: write
+      attestations: write
+    env:
+      RELEASE_TAG: ${{ github.event.client_payload.tag || inputs.tag }}
+
+    steps:
+      - name: Checkout public release repo
+        uses: actions/checkout@v4
+
+      - name: Checkout private source repo
+        uses: actions/checkout@v4
+        with:
+          repository: GTR2500/NEXUM
+          ref: refs/tags/${{ env.RELEASE_TAG }}
+          token: ${{ secrets.SOURCE_REPO_TOKEN }}
+          path: source
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: source/Nexum/.nvmrc
+          cache: npm
+          cache-dependency-path: source/Nexum/package-lock.json
+
+      - name: Install NSIS (required for electron-builder Windows installer)
+        uses: negrutiu/nsis-install@v2
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: source/Nexum
+
+      - name: Validate markdown locations
+        run: npm run docs:validate
+        working-directory: source/Nexum
+
+      - name: Verify version matches tag
+        shell: pwsh
+        working-directory: source/Nexum
+        run: |
+          $tag = "${{ env.RELEASE_TAG }}"
+          $expected = "v$(node -p "require('./package.json').version")"
+          if ($tag -ne $expected) {
+            echo "ERROR: Tag $tag does not match package.json version (expected $expected)"
+            exit 1
+          }
+
+      - name: Release check (build, typecheck, docs, snapshot pre-publish)
+        run: npm run release:check
+        working-directory: source/Nexum
+        env:
+          GITHUB_REF_NAME: ${{ env.RELEASE_TAG }}
+
+      - name: Zip backup
+        id: zip-backup
+        shell: pwsh
+        working-directory: source/Nexum
+        run: |
+          $tag = "${{ env.RELEASE_TAG }}"
+          $backupDir = "backup\Nexum_release_$tag"
+          if (Test-Path $backupDir) {
+            Compress-Archive -Path $backupDir -DestinationPath "release-backup.zip" -Force
+            echo "created=true" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "created=false" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Build release artifacts
+        run: npx electron-builder --win
+        working-directory: source/Nexum
+
+      - name: Delete old releases
+        shell: pwsh
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $currentTag = "${{ env.RELEASE_TAG }}"
+          $releases = gh release list --repo GTR2500/NEXUM-RELEASES --limit 100 --json tagName -q '.[].tagName' 2>$null
+          if ($releases) {
+            $tags = $releases -split "[\r\n]+" | ForEach-Object { $_.Trim() } | Where-Object { $_ -and $_ -ne $currentTag }
+            foreach ($tag in $tags) {
+              gh release delete $tag --repo GTR2500/NEXUM-RELEASES --yes --cleanup-tag 2>$null
+            }
+          }
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ env.RELEASE_TAG }}"
+          $files = Get-ChildItem -Path "source/Nexum/release" -Recurse -File | ForEach-Object { $_.FullName }
+          if (-not $files) {
+            echo "ERROR: No release artifacts found in source/Nexum/release"
+            exit 1
+          }
+
+          if ("${{ steps.zip-backup.outputs.created }}" -eq "true") {
+            $files += (Resolve-Path "source/Nexum/release-backup.zip").Path
+          }
+
+          gh release create $tag $files --repo GTR2500/NEXUM-RELEASES --generate-notes --latest
+
+      - name: Generate artifact attestation
+        uses: actions/attest@v4
+        with:
+          subject-path: source/Nexum/release/**/*
