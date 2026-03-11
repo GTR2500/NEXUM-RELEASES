@@ -86,7 +86,7 @@ jobs:
           }
 
       - name: Build release artifacts
-        run: npx electron-builder --win
+        run: npx electron-builder --win --publish never
         working-directory: source/Nexum
 
       - name: Delete old releases
