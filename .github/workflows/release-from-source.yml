@@ -65,6 +65,24 @@ jobs:
             exit 1
           }
 
+      - name: Verify release versions are aligned
+        shell: pwsh
+        working-directory: source/Nexum
+        run: |
+          $packageVersion = node -p "require('./package.json').version"
+          $lockVersion = node -p "require('./package-lock.json').version"
+          $manifestVersion = node -e "const fs=require('fs'); const src=fs.readFileSync('./src/core/nexumManifest.ts','utf8'); const m=src.match(/major:\s*(\d+),[\s\S]*?minor:\s*(\d+),[\s\S]*?patch:\s*(\d+)/); if(!m){process.exit(2)} console.log([m[1],m[2],m[3]].join('.'))"
+
+          if ($lockVersion -ne $packageVersion) {
+            Write-Error "package-lock.json version $lockVersion does not match package.json version $packageVersion"
+            exit 1
+          }
+
+          if ($manifestVersion -ne $packageVersion) {
+            Write-Error "nexumManifest.ts version $manifestVersion does not match package.json version $packageVersion"
+            exit 1
+          }
+
       - name: Release check (build, typecheck, docs, snapshot pre-publish)
         run: npm run release:check
         working-directory: source/Nexum
@@ -89,6 +107,48 @@ jobs:
         run: npx electron-builder --win --publish never
         working-directory: source/Nexum
 
+      - name: Collect curated release assets
+        id: curated-assets
+        shell: pwsh
+        run: |
+          $releaseDir = Resolve-Path "source/Nexum/release"
+          $allowedPatterns = @(
+            "latest.yml",
+            "builder-debug.yml",
+            "Nexum-Setup-*.exe",
+            "Nexum-Setup-*.exe.blockmap"
+          )
+
+          $files = foreach ($pattern in $allowedPatterns) {
+            Get-ChildItem -Path $releaseDir -Filter $pattern -File -ErrorAction SilentlyContinue
+          }
+
+          $files = $files | Sort-Object FullName -Unique
+
+          if (-not $files) {
+            Write-Error "No curated release assets found in source/Nexum/release"
+            exit 1
+          }
+
+          $missing = @()
+          if (-not ($files | Where-Object { $_.Name -eq "latest.yml" })) {
+            $missing += "latest.yml"
+          }
+          if (-not ($files | Where-Object { $_.Name -like "Nexum-Setup-*.exe" })) {
+            $missing += "Nexum-Setup-<version>.exe"
+          }
+          if (-not ($files | Where-Object { $_.Name -like "Nexum-Setup-*.exe.blockmap" })) {
+            $missing += "Nexum-Setup-<version>.exe.blockmap"
+          }
+          if ($missing.Count -gt 0) {
+            Write-Error ("Missing curated assets: " + ($missing -join ", "))
+            exit 1
+          }
+
+          $manifest = Join-Path $env:RUNNER_TEMP "release-assets.txt"
+          $files.FullName | Set-Content -Path $manifest
+          "manifest=$manifest" >> $env:GITHUB_OUTPUT
+
       - name: Delete old releases
         shell: pwsh
         continue-on-error: true
@@ -110,9 +170,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ env.RELEASE_TAG }}"
-          $files = Get-ChildItem -Path "source/Nexum/release" -Recurse -File | ForEach-Object { $_.FullName }
+          $files = Get-Content "${{ steps.curated-assets.outputs.manifest }}"
           if (-not $files) {
-            echo "ERROR: No release artifacts found in source/Nexum/release"
+            echo "ERROR: No curated release artifacts found"
             exit 1
           }
 
