@@ -156,10 +156,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $currentTag = "${{ env.RELEASE_TAG }}"
-          $releases = gh release list --repo GTR2500/NEXUM-RELEASES --limit 100 --json tagName -q '.[].tagName' 2>$null
-          if ($releases) {
-            $tags = $releases -split "[\r\n]+" | ForEach-Object { $_.Trim() } | Where-Object { $_ -and $_ -ne $currentTag }
-            foreach ($tag in $tags) {
+          $raw = gh release list --repo GTR2500/NEXUM-RELEASES --limit 100 --json tagName,createdAt 2>$null
+          if (-not $raw) { exit 0 }
+          try {
+            $data = $raw | ConvertFrom-Json
+          } catch { exit 0 }
+          if (-not $data) { exit 0 }
+          $ordered = @($data | Sort-Object -Property { [datetime]$_.createdAt } -Descending | ForEach-Object { $_.tagName } | Where-Object { $_ })
+          $withoutCurrent = @($ordered | Where-Object { $_ -ne $currentTag })
+          $toDelete = @($withoutCurrent | Select-Object -Skip 2)
+          foreach ($tag in $toDelete) {
+            if ($tag) {
               gh release delete $tag --repo GTR2500/NEXUM-RELEASES --yes --cleanup-tag 2>$null
             }
           }
